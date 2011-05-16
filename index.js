@@ -1,4 +1,4 @@
-module.exports = function (start, stop) {
+var exports = module.exports = function (start, stop) {
     if (!stop) {
         stop = start;
         start = 0;

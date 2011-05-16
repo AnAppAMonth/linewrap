@@ -15,7 +15,12 @@
         "column"
     ],
     "directories" : {
-        "lib" : "."
+        "lib" : ".",
+        "example" : "example",
+        "test" : "test"
+    },
+    "scripts" : {
+        "test" : "expresso"
     },
     "devDependencies" : {
         "expresso" : "=0.7.x"
