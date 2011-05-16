@@ -20,10 +20,12 @@ exports.start20stop60 = function () {
     var words = idleness.split(/\s+/);
     
     lines.forEach(function (line) {
-console.log(line);
         assert.ok(line.length <= 100, 'line > 100 columns');
-        var chunks = line.match(/\S/) ? line.split(/\s+/) : [];
+        var chunks = line
+            .split(/\s+/)
+            .filter(function (x) { return x.match(/\S/) })
+        ;
         assert.deepEqual(chunks, words.splice(0, chunks.length));
-        assert.deepEqual(line.slice(0, 20), new Array(20).join(' '));
+        assert.deepEqual(line.slice(0, 20), new Array(20 + 1).join(' '));
     });
 };
