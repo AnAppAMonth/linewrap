@@ -12,14 +12,14 @@ made out of meat
 meat.js
 
     var wrap = require('wordwrap')(15);
-    console.log(wrap('You and your whole family is made out of meat.'));
+    console.log(wrap('You and your whole family are made out of meat.'));
 
 output:
 
     You and your
     whole family
-    is made out of
-    meat.
+    are made out
+    of meat.
 
 centered
 --------

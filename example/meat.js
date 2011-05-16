@@ -1,3 +1,3 @@
 var wrap = require('wordwrap')(15);
 
-console.log(wrap('You and your whole family is made out of meat.'));
+console.log(wrap('You and your whole family are made out of meat.'));
