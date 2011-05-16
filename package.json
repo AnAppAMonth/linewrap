@@ -17,6 +17,9 @@
     "directories" : {
         "lib" : "."
     },
+    "devDependencies" : {
+        "expresso" : "=0.7.x"
+    },
     "engines" : {
         "node" : ">=0.4.0"
     },

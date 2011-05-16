@@ -1,11 +1,12 @@
-exports.wrap = function (start, stop) {
+module.exports = function (start, stop) {
     if (!stop) {
         stop = start;
         start = 0;
     }
     
     return function (text) {
-        return text.split(/(\S+\s+)/).reduce(function (lines, rawChunk) {
+        return text.toString().split(/(\S+\s+)/)
+        .reduce(function (lines, rawChunk) {
             if (rawChunk === '') return lines;
             
             var chunk = rawChunk.replace(/\t/g, '    ');
@@ -16,10 +17,10 @@ exports.wrap = function (start, stop) {
                 lines.push(chunk.replace(/^\s+/, ''));
             }
             else {
-                lines[i] += chunk;
+                lines[i] += new Array(start).join(' ') + chunk;
             }
             
             return lines;
-        }, [ '' ]);
+        }, [ new Array(start).join(' ') ]).join('\n');
     };
 };
