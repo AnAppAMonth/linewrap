@@ -47,8 +47,24 @@ output:
                         Just drifting through emptiness. The
                         sun was just another point of light.
 
-wrap(stop), wrap(start, stop)
-=============================
+methods
+=======
+
+var wrap = require('wordwrap');
+
+wrap(stop), wrap(start, stop, params={mode:"soft"})
+---------------------------------------------------
+
+Returns a function that takes a string and returns a new string.
 
 Pad out lines with spaces out to column `start` and then wrap until column
 `stop`. If a word is longer than `stop - start` characters it will overflow.
+
+In "soft" mode, split chunks by `/(\S+\s+/` and don't break up chunks which are
+longer than `stop - start`, in "hard" mode, split chunks with `/\b/` and break
+up chunks longer than `stop - start`.
+
+wrap.hard(start, stop)
+----------------------
+
+Like `wrap()` but with `params.mode = "hard"`.
