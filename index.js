@@ -1,8 +1,23 @@
-var exports = module.exports = function (start, stop) {
+var wordwrap = module.exports = function (start, stop, params) {
+    if (typeof start === 'object') {
+        params = start;
+        start = params.start;
+        stop = params.stop;
+    }
+    
+    if (typeof stop === 'object') {
+        params = stop;
+        start = start || params.start;
+        stop = undefined;
+    }
+    
     if (!stop) {
         stop = start;
         start = 0;
     }
+    
+    if (!params) params = {};
+    var mode = params.mode || 'soft';
     
     return function (text) {
         return text.toString().split(/(\S+\s+)/)
@@ -39,4 +54,10 @@ var exports = module.exports = function (start, stop) {
             return lines;
         }, [ new Array(start + 1).join(' ') ]).join('\n');
     };
+};
+
+wordwrap.soft = wordwrap;
+
+wordwrap.hard = function (start, stop) {
+    return wordwrap(start, stop, { mode : 'hard' });
 };
