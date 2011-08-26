@@ -24,9 +24,12 @@ var wordwrap = module.exports = function (start, stop, params) {
         var chunks = text.toString()
             .split(re)
             .reduce(function (acc, x) {
-                for (var i = 0; i < x.length; i += stop - start) {
-                    acc.push(x.slice(i, i + stop - start));
+                if (mode === 'hard') {
+                    for (var i = 0; i < x.length; i += stop - start) {
+                        acc.push(x.slice(i, i + stop - start));
+                    }
                 }
+                else acc.push(x)
                 return acc;
             }, [])
         ;
