@@ -18,10 +18,20 @@ var wordwrap = module.exports = function (start, stop, params) {
     
     if (!params) params = {};
     var mode = params.mode || 'soft';
+    var re = mode === 'hard' ? /\b/ : /(\S+\s+)/;
     
     return function (text) {
-        return text.toString().split(/(\S+\s+)/)
-        .reduce(function (lines, rawChunk) {
+        var chunks = text.toString()
+            .split(re)
+            .reduce(function (acc, x) {
+                for (var i = 0; i < x.length; i += stop - start) {
+                    acc.push(x.slice(i, i + stop - start));
+                }
+                return acc;
+            }, [])
+        ;
+        
+        return chunks.reduce(function (lines, rawChunk) {
             if (rawChunk === '') return lines;
             
             var chunk = rawChunk.replace(/\t/g, '    ');
