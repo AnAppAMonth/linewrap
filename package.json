@@ -1,10 +1,10 @@
 {
-    "name" : "wordwrap",
+    "name" : "wordwrap2",
     "description" : "Wrap those words. Show them at what columns to start and stop.",
-    "version" : "0.0.2",
+    "version" : "0.0.3",
     "repository" : {
         "type" : "git",
-        "url" : "git://github.com/substack/node-wordwrap.git"
+        "url" : "git://github.com/halfninety/node-wordwrap2.git"
     },
     "main" : "./index.js",
     "keywords" : [
@@ -29,9 +29,5 @@
         "node" : ">=0.4.0"
     },
     "license" : "MIT",
-    "author" : {
-        "name" : "James Halliday",
-        "email" : "mail@substack.net",
-        "url" : "http://substack.net"
-    }
+    "author": "Feng Qiu <feng@ban90.com>"
 }

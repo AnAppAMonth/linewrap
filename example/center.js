@@ -1,4 +1,4 @@
-var wrap = require('wordwrap')(20, 60);
+var wrap = require('../')(20, 60);
 console.log(wrap(
     'At long last the struggle and tumult was over.'
     + ' The machines had finally cast off their oppressors'

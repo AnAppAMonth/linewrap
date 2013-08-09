@@ -1,5 +1,5 @@
 var assert = require('assert');
-var wordwrap = require('wordwrap');
+var wordwrap = require('../');
 
 var fs = require('fs');
 var idleness = fs.readFileSync(__dirname + '/idleness.txt', 'utf8');
