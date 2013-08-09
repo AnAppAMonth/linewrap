@@ -4,22 +4,23 @@ var wordwrap = module.exports = function (start, stop, params) {
         start = params.start;
         stop = params.stop;
     }
-    
+
     if (typeof stop === 'object') {
         params = stop;
         start = start || params.start;
         stop = undefined;
     }
-    
+
     if (!stop) {
         stop = start;
         start = 0;
     }
-    
+
     if (!params) params = {};
     var mode = params.mode || 'soft';
     var re = mode === 'hard' ? /\b/ : /(\S+\s+)/;
-    
+    var prefix = new Array(start + 1).join(' ');
+
     return function (text) {
         var chunks = text.toString()
             .split(re)
@@ -33,39 +34,36 @@ var wordwrap = module.exports = function (start, stop, params) {
                 return acc;
             }, [])
         ;
-        
-        return chunks.reduce(function (lines, rawChunk) {
+
+        chunks = chunks.reduce(function (lines, rawChunk) {
             if (rawChunk === '') return lines;
-            
+
             var chunk = rawChunk.replace(/\t/g, '    ');
-            
             var i = lines.length - 1;
-            if (lines[i].length + chunk.length > stop) {
-                lines[i] = lines[i].replace(/\s+$/, '');
-                
-                chunk.split(/\n/).forEach(function (c) {
-                    lines.push(
-                        new Array(start + 1).join(' ')
-                        + c.replace(/^\s+/, '')
-                    );
-                });
-            }
-            else if (chunk.match(/\n/)) {
-                var xs = chunk.split(/\n/);
-                lines[i] += xs.shift();
-                xs.forEach(function (c) {
-                    lines.push(
-                        new Array(start + 1).join(' ')
-                        + c.replace(/^\s+/, '')
-                    );
-                });
-            }
-            else {
-                lines[i] += chunk;
-            }
-            
+			var xs = chunk.split(/\n/),
+				curr = xs[0];
+
+            if (!(lines[i].length + curr.length > stop &&
+					lines[i].length + curr.replace(/\s+$/, '').length > stop &&
+					lines[i].length > start)) {
+				lines[i] += xs.shift();
+			}
+
+			xs.forEach(function (c) {
+				if (i === lines.length -1 ) {
+					lines[i] = lines[i].replace(/\s+$/, '');
+					if (!lines[i]) lines[i] = prefix;
+				}
+				lines.push(prefix + c.replace(/^\s+/, ''));
+			});
+
             return lines;
-        }, [ new Array(start + 1).join(' ') ]).join('\n');
+        }, [ prefix ]);
+
+		var last = chunks.length - 1;
+		chunks[last] = chunks[last].replace(/\s+$/, '');
+		if (!chunks[last]) chunks[last] = prefix;
+        return chunks.join('\n');
     };
 };
 
