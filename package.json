@@ -23,7 +23,8 @@
         "test" : "expresso"
     },
     "devDependencies" : {
-        "expresso" : "=0.7.x"
+        "expresso" : "=0.7.x",
+        "wordwrap" : "*"
     },
     "engines" : {
         "node" : ">=0.4.0"
