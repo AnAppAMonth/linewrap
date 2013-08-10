@@ -40,29 +40,29 @@ var wordwrap = module.exports = function (start, stop, params) {
 
             var chunk = rawChunk.replace(/\t/g, '    ');
             var i = lines.length - 1;
-			var xs = chunk.split(/\n/),
-				curr = xs[0];
+            var xs = chunk.split(/\n/),
+                curr = xs[0];
 
             if (!(lines[i].length + curr.length > stop &&
-					lines[i].length + curr.replace(/\s+$/, '').length > stop &&
-					lines[i].length > start)) {
-				lines[i] += xs.shift();
-			}
+                    lines[i].length + curr.replace(/\s+$/, '').length > stop &&
+                    lines[i].length > start)) {
+                lines[i] += xs.shift();
+            }
 
-			xs.forEach(function (c) {
-				if (i === lines.length -1 ) {
-					lines[i] = lines[i].replace(/\s+$/, '');
-					if (!lines[i]) lines[i] = prefix;
-				}
-				lines.push(prefix + c.replace(/^\s+/, ''));
-			});
+            xs.forEach(function (c) {
+                if (i === lines.length -1 ) {
+                    lines[i] = lines[i].replace(/\s+$/, '');
+                    if (!lines[i]) lines[i] = prefix;
+                }
+                lines.push(prefix + c.replace(/^\s+/, ''));
+            });
 
             return lines;
         }, [ prefix ]);
 
-		var last = chunks.length - 1;
-		chunks[last] = chunks[last].replace(/\s+$/, '');
-		if (!chunks[last]) chunks[last] = prefix;
+        var last = chunks.length - 1;
+        chunks[last] = chunks[last].replace(/\s+$/, '');
+        if (!chunks[last]) chunks[last] = prefix;
         return chunks.join('\n');
     };
 };
