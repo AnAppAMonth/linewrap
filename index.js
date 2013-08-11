@@ -20,6 +20,7 @@ var wordwrap = module.exports = function (start, stop, params) {
     var mode = params.mode || 'soft';
     // Availbalbe options: 'collapse', 'default', 'line', and 'all'
     var whitespace = params.whitespace || 'default';
+    var tabWidth = params.tabWidth || 4;
 
     var re = mode === 'hard' ? /\b/ : /(\S+\s+)/;
     var prefix = new Array(start + 1).join(' ');
@@ -34,7 +35,7 @@ var wordwrap = module.exports = function (start, stop, params) {
     }
 
     return function (text) {
-		text = text.toString().replace(/\t/g, '    ');
+		text = text.toString().replace(/\t/g, new Array(tabWidth + 1).join(' '));
 
 		if (whitespace === 'collapse') {
 			text = text.replace(/  +/g, ' ');
