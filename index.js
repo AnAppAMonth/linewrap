@@ -1,3 +1,14 @@
+
+// lineBreak Schemes
+var brPat = /<\s*br(?:[\s/]*|\s[^>]*)>/i;
+var lineBreakSchemeMap = {
+    'unix': [/\n/, '\n'],
+    'dos': [/\r\n/, '\r\n'],
+    'mac': [/\r/, '\r'],
+    'html': [brPat, '<br>'],
+    'xhtml': [brPat, '<br/>'],
+}
+
 var linewrap = module.exports = function (start, stop, params) {
     if (typeof start === 'object') {
         params = start;
@@ -51,6 +62,31 @@ var linewrap = module.exports = function (start, stop, params) {
         skipPat = new RegExp(params.skipStr, 'g');
     } else {
         skipPat = undefined;
+    }
+
+    // Precedence:
+    // - for lineBreakPat: Scheme > Regex > Str
+    // - for lineBreakStr: Scheme > Str
+    var lineBreakScheme = params.lineBreakScheme,
+        lineBreakPat = params.lineBreakRegex,
+        lineBreakStr = params.lineBreakStr;
+    if (lineBreakScheme) {
+        // Supported schemes: 'unix', 'dos', 'mac', 'html', 'xhtml'
+        var item = lineBreakSchemeMap[lineBreakScheme];
+        if (item) {
+            lineBreakPat = item[0];
+            lineBreakStr = item[1];
+        }
+    }
+    if (!(lineBreakPat instanceof RegExp)) {
+        if (lineBreakStr) {
+            lineBraekPat = new RegExp(lineBreakStr);
+        } else {
+            lineBreakPat = /\n/;
+        }
+    }
+    if (!lineBreakStr) {
+        lineBreakStr = '\n';
     }
 
     var re = mode === 'hard' ? /\b/ : /(\S+\s+)/;
@@ -124,9 +160,9 @@ var linewrap = module.exports = function (start, stop, params) {
             }
 
             var xs, curr, curr2;
-            if (/\n/.test(chunk)) {
+            if (lineBreakPat.test(chunk)) {
                 // Don't pre-shift
-                xs = chunk.split(/\n/);
+                xs = chunk.split(lineBreakPat);
                 curr = xs[0];
             } else {
                 // Pre-shift
@@ -177,7 +213,7 @@ var linewrap = module.exports = function (start, stop, params) {
         if (stripTrailingWS || curLineLength > stop) {
             chunks[curLine] = chunks[curLine].replace(tPat, '$1');
         }
-        return chunks.join('\n');
+        return chunks.join(lineBreakStr);
     };
 };
 
