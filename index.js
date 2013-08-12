@@ -9,6 +9,10 @@ var lineBreakSchemeMap = {
     'xhtml': [brPat, '<br/>'],
 }
 
+function escapeRegExp(s) {
+    return s.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
+}
+
 var linewrap = module.exports = function (start, stop, params) {
     if (typeof start === 'object') {
         params = start;
@@ -59,7 +63,7 @@ var linewrap = module.exports = function (start, stop, params) {
             skipPat.lastIndex = 0;
         }
     } else if (params.skipStr) {
-        skipPat = new RegExp(params.skipStr, 'g');
+        skipPat = new RegExp(escapeRegExp(params.skipStr), 'g');
     } else {
         skipPat = undefined;
     }
@@ -80,7 +84,7 @@ var linewrap = module.exports = function (start, stop, params) {
     }
     if (!(lineBreakPat instanceof RegExp)) {
         if (lineBreakStr) {
-            lineBraekPat = new RegExp(lineBreakStr);
+            lineBraekPat = new RegExp(escapeRegExp(lineBreakStr));
         } else {
             lineBreakPat = /\n/;
         }
