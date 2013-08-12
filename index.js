@@ -123,29 +123,49 @@ var linewrap = module.exports = function (start, stop, params) {
                 return lines;
             }
 
-            var xs = chunk.split(/\n/),
-                curr = xs[0],
-                curr2;
+            var xs, curr, curr2;
+            if (/\n/.test(chunk)) {
+                // Don't pre-shift
+                xs = chunk.split(/\n/);
+                curr = xs[0];
+            } else {
+                // Pre-shift
+                xs = null;
+                curr = chunk;
+            }
 
-            if (!(curLineLength + curr.length > stop &&
+            if (curLineLength + curr.length > stop &&
                     curLineLength + (curr2 = curr.replace(/\s+$/, '')).length > stop &&
                     curr2 !== '' &&
-                    curLineLength > start)) {
-                lines[curLine] += xs.shift();
+                    curLineLength > start) {
+                // This line is full, add `curr` to the next line
+                if (!xs) {
+                    // Unshift since we pre-shifted
+                    xs = [curr];
+                }
+            } else {
+                // Add `curr` to this line
+                if (xs) {
+                    // Shift since we didn't pre-shift
+                    xs.shift();
+                }
+                lines[curLine] += curr;
                 curLineLength += curr.length;
             }
 
-            xs.forEach(function (c) {
-                if (stripTrailingWS || curLineLength > stop) {
-                    lines[curLine] = lines[curLine].replace(tPat, '$1');
-                }
-                if (stripPrecedingWS) {
-                    c = c.replace(/^\s+/, '');
-                }
-                lines.push(prefix + c);
-                curLine++;
-                curLineLength = start + c.length;
-            });
+            if (xs) {
+                xs.forEach(function (c) {
+                    if (stripTrailingWS || curLineLength > stop) {
+                        lines[curLine] = lines[curLine].replace(tPat, '$1');
+                    }
+                    if (stripPrecedingWS) {
+                        c = c.replace(/^\s+/, '');
+                    }
+                    lines.push(prefix + c);
+                    curLine++;
+                    curLineLength = start + c.length;
+                });
+            }
 
             return lines;
         }, [ prefix ]);
