@@ -163,8 +163,15 @@ var wordwrap = module.exports = function (start, stop, params) {
 
 wordwrap.soft = wordwrap;
 
-wordwrap.hard = function (start, stop) {
-    return wordwrap(start, stop, { mode : 'hard' });
+wordwrap.hard = function (start, stop, params) {
+    var args = [].slice.call(arguments);
+    var last = args.length - 1;
+    if (typeof args[last] === 'object') {
+        args[last].mode = 'hard';
+    } else {
+        args.push({ mode : 'hard' });
+    }
+    return wordwrap.apply(null, args);
 };
 
 wordwrap.wrap = function(text, start, stop, params) {
