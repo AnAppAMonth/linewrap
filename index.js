@@ -166,3 +166,9 @@ wordwrap.soft = wordwrap;
 wordwrap.hard = function (start, stop) {
     return wordwrap(start, stop, { mode : 'hard' });
 };
+
+wordwrap.wrap = function(text, start, stop, params) {
+    var args = [].slice.call(arguments);
+    args.shift();
+    return wordwrap.apply(null, args)(text);
+}
