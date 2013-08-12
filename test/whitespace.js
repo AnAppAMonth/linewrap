@@ -1,15 +1,15 @@
 var assert = require('assert');
-var wordwrap2 = require('../');
+var linewrap = require('../');
 
 var fs = require('fs');
 var content = fs.readFileSync(__dirname + '/whitespace.json', 'utf8'),
     data = JSON.parse(content);
 
 exports.stop30 = function () {
-    var wrapD = wordwrap2(30),
-        wrapC = wordwrap2(30, {whitespace: 'collapse'}),
-        wrapL = wordwrap2(30, {whitespace: 'line'}),
-        wrapA = wordwrap2(30, {whitespace: 'all'});
+    var wrapD = linewrap(30),
+        wrapC = linewrap(30, {whitespace: 'collapse'}),
+        wrapL = linewrap(30, {whitespace: 'line'}),
+        wrapA = linewrap(30, {whitespace: 'all'});
 
     var text = data.text,
         resD = wrapD(text),
@@ -37,10 +37,10 @@ exports.stop30 = function () {
 };
 
 exports.start10stop40 = function () {
-    var wrapDS = wordwrap2(10, 40, {whitespace: 'invalid value'}),
-        wrapCS = wordwrap2(10, 40, {whitespace: 'collapse'}),
-        wrapLS = wordwrap2(10, 40, {whitespace: 'line'}),
-        wrapAS = wordwrap2(10, 40, {whitespace: 'all'});
+    var wrapDS = linewrap(10, 40, {whitespace: 'invalid value'}),
+        wrapCS = linewrap(10, 40, {whitespace: 'collapse'}),
+        wrapLS = linewrap(10, 40, {whitespace: 'line'}),
+        wrapAS = linewrap(10, 40, {whitespace: 'all'});
 
     var text = data.text,
         resDS = wrapDS(text),

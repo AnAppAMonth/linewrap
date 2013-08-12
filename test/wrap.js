@@ -1,13 +1,13 @@
 var assert = require('assert');
 var wordwrap = require('wordwrap');
-var wordwrap2 = require('../');
+var linewrap = require('../');
 
 var fs = require('fs');
 var idleness = fs.readFileSync(__dirname + '/idleness.txt', 'utf8');
 
 exports.stop80 = function () {
 	var res = wordwrap(80)(idleness),
-	    res2 = wordwrap2(80)(idleness);
+	    res2 = linewrap(80)(idleness);
 
 //	assert.equal(res, res2);
 
@@ -22,7 +22,7 @@ exports.stop80 = function () {
 
 exports.start20stop60 = function () {
 	var res = wordwrap(20, 100)(idleness),
-	    res2 = wordwrap2(20, 100)(idleness);
+	    res2 = linewrap(20, 100)(idleness);
 
 //	assert.equal(res, res2);
 

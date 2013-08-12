@@ -1,12 +1,12 @@
 var assert = require('assert');
-var wordwrap2 = require('../');
+var linewrap = require('../');
 
 var fs = require('fs');
 var text = fs.readFileSync(__dirname + '/html.txt', 'utf8'),
     result = fs.readFileSync(__dirname + '/html-res.txt', 'utf8');
 
 exports.html_skip = function () {
-    var wrap = wordwrap2(30, {skipScheme: 'html'}),
+    var wrap = linewrap(30, {skipScheme: 'html'}),
         res = wrap(text);
 
     assert.equal(res, result);

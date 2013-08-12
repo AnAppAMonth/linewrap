@@ -1,4 +1,4 @@
-var wordwrap = module.exports = function (start, stop, params) {
+var linewrap = module.exports = function (start, stop, params) {
     if (typeof start === 'object') {
         params = start;
         start = params.start;
@@ -161,9 +161,9 @@ var wordwrap = module.exports = function (start, stop, params) {
     };
 };
 
-wordwrap.soft = wordwrap;
+linewrap.soft = linewrap;
 
-wordwrap.hard = function (start, stop, params) {
+linewrap.hard = function (start, stop, params) {
     var args = [].slice.call(arguments);
     var last = args.length - 1;
     if (typeof args[last] === 'object') {
@@ -171,11 +171,11 @@ wordwrap.hard = function (start, stop, params) {
     } else {
         args.push({ mode : 'hard' });
     }
-    return wordwrap.apply(null, args);
+    return linewrap.apply(null, args);
 };
 
-wordwrap.wrap = function(text, start, stop, params) {
+linewrap.wrap = function(text, start, stop, params) {
     var args = [].slice.call(arguments);
     args.shift();
-    return wordwrap.apply(null, args)(text);
+    return linewrap.apply(null, args)(text);
 }

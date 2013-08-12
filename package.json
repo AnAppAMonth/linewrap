@@ -1,10 +1,10 @@
 {
-    "name" : "wordwrap2",
+    "name" : "linewrap",
     "description" : "Wrap those words. Show them at what columns to start and stop.",
     "version" : "0.0.3",
     "repository" : {
         "type" : "git",
-        "url" : "git://github.com/halfninety/node-wordwrap2.git"
+        "url" : "git://github.com/halfninety/node-linewrap.git"
     },
     "main" : "./index.js",
     "keywords" : [

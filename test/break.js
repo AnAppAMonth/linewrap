@@ -1,6 +1,6 @@
 var assert = require('assert');
 var wordwrap = require('wordwrap');
-var wordwrap2 = require('../');
+var linewrap = require('../');
 
 exports.hard = function () {
     var s = 'Assert from {"type":"equal","ok":false,"found":1,"wanted":2,'
@@ -9,7 +9,7 @@ exports.hard = function () {
     ;
 
     var s_ = wordwrap.hard(80)(s);
-        s_2 = wordwrap2.hard(80)(s);
+        s_2 = linewrap.hard(80)(s);
 
 //    assert.equal(s_, s_2);
 
@@ -25,7 +25,7 @@ exports.break = function () {
     var s = new Array(55+1).join('a');
 
     var s_ = wordwrap.hard(20)(s);
-        s_2 = wordwrap2.hard(20)(s);
+        s_2 = linewrap.hard(20)(s);
 
 //    assert.equal(s_, s_2);
 
