@@ -8,7 +8,7 @@ exports.hard = function () {
         + '"browser":"chrome/6.0"}'
     ;
 
-    var s_ = wordwrap.hard(80)(s);
+    var s_ = wordwrap.hard(80)(s),
         s_2 = linewrap.hard(80)(s);
 
 //    assert.equal(s_, s_2);
@@ -24,7 +24,7 @@ exports.hard = function () {
 exports.break = function () {
     var s = new Array(55+1).join('a');
 
-    var s_ = wordwrap.hard(20)(s);
+    var s_ = wordwrap.hard(20)(s),
         s_2 = linewrap.hard(20)(s);
 
 //    assert.equal(s_, s_2);

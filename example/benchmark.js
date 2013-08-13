@@ -27,8 +27,8 @@ if (require.main === module) {
                   'linewrap(30), br, skip', 'linewrap(30), br, no-respect'];
     var loops = [500, 500, 500, 500, 500, 500, 5000, 5000, 10000, 10000, 10000];
 
-    start = parseInt(process.argv[2]) - 1;
-    end = parseInt(process.argv[3]) - 1;
+    start = parseInt(process.argv[2], 10) - 1;
+    end = parseInt(process.argv[3], 10) - 1;
     if (start > end) {
         k = start;
         start = end;

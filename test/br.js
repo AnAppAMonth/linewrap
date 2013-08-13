@@ -8,12 +8,12 @@ var brPat = /<\s*br(?:[\s/]*|\s[^>]*)>/i;
 
 exports.stop30 = function () {
     var wrap = linewrap(30, {lineBreakScheme: 'html'}),
-        wrapLF = linewrap(30, {lineBreakScheme: 'html', lineBreak: '\n'});
+        wrapLF = linewrap(30, {lineBreakScheme: 'html', lineBreak: '\n'}),
         wrapNR = linewrap(30, {lineBreakScheme: 'html', respectLineBreaks: false});
 
     var text = data.text,
         res = wrap(text),
-        resLF = wrapLF(text);
+        resLF = wrapLF(text),
         resNR = wrapNR(text);
 
     assert.equal(res, data.res);

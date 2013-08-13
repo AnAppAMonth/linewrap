@@ -39,7 +39,7 @@ var linewrap = module.exports = function (start, stop, params) {
         start = 0;
     }
 
-    if (!params) params = {};
+    if (!params) { params = {}; }
     var mode = params.mode || 'soft';
     // Availbalbe options: 'collapse', 'default', 'line', and 'all'
     var whitespace = params.whitespace || 'default';
@@ -68,8 +68,8 @@ var linewrap = module.exports = function (start, stop, params) {
             skipPat = skip;
             if (!skipPat.global) {
                 flags = 'g';
-                if (skipPat.ignoreCase) flags += 'i';
-                if (skipPat.multiline) flags += 'm';
+                if (skipPat.ignoreCase) { flags += 'i'; }
+                if (skipPat.multiline) { flags += 'm'; }
                 skipPat = new RegExp(skipPat.source, flags);
             }
         } else if (typeof skip === 'string') {
@@ -139,8 +139,8 @@ var linewrap = module.exports = function (start, stop, params) {
     var stripLineBreakPat;
     if (!respectLineBreaks) {
         flags = 'g';
-        if (lineBreakPat.ignoreCase) flags += 'i';
-        if (lineBreakPat.multiline) flags += 'm';
+        if (lineBreakPat.ignoreCase) { flags += 'i'; }
+        if (lineBreakPat.multiline) { flags += 'm'; }
         stripLineBreakPat = new RegExp('\\s*(?:' + lineBreakPat.source + ')(?:' + lineBreakPat.source + '|\\s)*', flags);
         // We need `lineBreakPat` to be global in this case.
         if (!lineBreakPat.global) {
@@ -151,7 +151,7 @@ var linewrap = module.exports = function (start, stop, params) {
     var re = mode === 'hard' ? /\b/ : /(\S+\s+)/;
     var prefix = new Array(start + 1).join(' ');
     var stripPrecedingWS = !(whitespace === 'line' || whitespace === 'all'),
-        stripTrailingWS = !(whitespace === 'all');
+        stripTrailingWS = (whitespace !== 'all');
     var pPat, tPat;
 
     if (stripTrailingWS) {
@@ -167,10 +167,11 @@ var linewrap = module.exports = function (start, stop, params) {
             text = text.replace(/  +/g, ' ');
         }
 
+        var match;
         if (!lineBreakStr) {
             // Try to get lineBreakStr from `text`
             lineBreakPat.lastIndex = 0;
-            var match = lineBreakPat.exec(text);
+            match = lineBreakPat.exec(text);
             if (match) {
                 lineBreakStr = match[0];
             } else {
@@ -186,13 +187,14 @@ var linewrap = module.exports = function (start, stop, params) {
             });
         }
 
-        var segments, match, base = 0;
+        var segments, base = 0;
         if (skipPat) {
             segments = [];
             skipPat.lastIndex = 0;
             match = skipPat.exec(text);
             while(match) {
                 segments.push(text.substring(base, match.index));
+                /* jshint -W053 */
                 segments.push(new String(match[0]));
                 base = match.index + match[0].length;
                 match = skipPat.exec(text);
@@ -218,7 +220,7 @@ var linewrap = module.exports = function (start, stop, params) {
                             acc.push(x.slice(k, k + stop - start));
                         }
                     }
-                    else acc.push(x);
+                    else { acc.push(x); }
                 }
                 chunks = chunks.concat(acc);
             } else {
@@ -233,7 +235,7 @@ var linewrap = module.exports = function (start, stop, params) {
         for (i = 0; i < chunks.length; i++) {
             var chunk = chunks[i];
 
-            if (chunk === '') continue;
+            if (chunk === '') { continue; }
 
             if (typeof chunk !== 'string') {
                 // Assumption: skip strings don't end with whitespaces.
@@ -306,7 +308,7 @@ var linewrap = module.exports = function (start, stop, params) {
 
 linewrap.soft = linewrap;
 
-linewrap.hard = function (start, stop, params) {
+linewrap.hard = function (/*start, stop, params*/) {
     var args = [].slice.call(arguments);
     var last = args.length - 1;
     if (typeof args[last] === 'object') {
@@ -317,8 +319,8 @@ linewrap.hard = function (start, stop, params) {
     return linewrap.apply(null, args);
 };
 
-linewrap.wrap = function(text, start, stop, params) {
+linewrap.wrap = function(text/*, start, stop, params*/) {
     var args = [].slice.call(arguments);
     args.shift();
     return linewrap.apply(null, args)(text);
-}
+};

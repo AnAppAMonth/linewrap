@@ -20,10 +20,12 @@
         "test" : "test"
     },
     "scripts" : {
+        "pretest": "jshint --verbose --config test/jshint.json ./*js test/*js example/*js",
         "test" : "expresso"
     },
     "devDependencies" : {
         "expresso" : "=0.7.x",
+        "jshint" : "*",
         "wordwrap" : "*"
     },
     "engines" : {
