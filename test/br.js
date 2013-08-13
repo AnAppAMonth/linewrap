@@ -8,7 +8,7 @@ var brPat = /<\s*br(?:[\s/]*|\s[^>]*)>/i;
 
 exports.stop30 = function () {
     var wrap = linewrap(30, {lineBreakScheme: 'html'}),
-        wrapLF = linewrap(30, {lineBreakRegex: brPat, lineBreakStr: '\n'});
+        wrapLF = linewrap(30, {lineBreakScheme: 'html', lineBreak: '\n'});
 
     var text = data.text,
         res = wrap(text),

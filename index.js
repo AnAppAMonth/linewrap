@@ -6,8 +6,15 @@ var lineBreakSchemeMap = {
     'dos': [/\r\n/, '\r\n'],
     'mac': [/\r/, '\r'],
     'html': [brPat, '<br>'],
-    'xhtml': [brPat, '<br/>'],
-}
+    'xhtml': [brPat, '<br/>']
+};
+
+// skip Schemes
+var skipSchemeMap = {
+    'ansi-color': /\x1B\[[^m]*m/g,
+    'html': /<[^>]*>/g,
+    'bbcode': /\[[^]]*\]/g
+};
 
 function escapeRegExp(s) {
     return s.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
@@ -37,43 +44,39 @@ var linewrap = module.exports = function (start, stop, params) {
     var whitespace = params.whitespace || 'default';
     var tabWidth = params.tabWidth || 4;
 
-    // Precedence: Scheme > Regex > Str
-    var skipScheme = params.skipScheme,
-        skipPat = params.skipRegex;
-    if (skipScheme) {
-        // Supported schemes: 'color', 'html', 'bbcode'
-        if (skipScheme === 'color') {
-            skipPat = /\x1B\[[^m]*m/g;
-        } else if (skipScheme === 'html') {
-            skipPat = /<[^>]*>/g;
-        } else if (skipScheme === 'bbcode') {
-            skipPat = /\[[^]]*\]/g;
+    // Precedence: Regex = Str > Scheme
+    var skip = params.skip,
+        skipPat;
+
+    if (skip) {
+        if (skip instanceof RegExp) {
+            skipPat = skip;
+            if (!skipPat.global) {
+                var flags = 'g';
+                if (skipPat.ignoreCase) {
+                    flags += 'i';
+                } else if (skipPat.multiline) {
+                    flags += 'm';
+                }
+                skipPat = new RegExp(skipPat.source, flags);
+            } else {
+                skipPat.lastIndex = 0;
+            }
+        } else if (typeof skip === 'string') {
+            skipPat = new RegExp(escapeRegExp(skip), 'g');
         }
     }
-    if (skipPat instanceof RegExp) {
-        if (!skipPat.global) {
-            var flags = 'g';
-            if (skipPat.ignoreCase) {
-                flags += 'i';
-            } else if (skipPat.multiline) {
-                flags += 'm';
-            }
-            skipPat = new RegExp(skipPat.source, flags);
-        } else {
-            skipPat.lastIndex = 0;
-        }
-    } else if (params.skipStr) {
-        skipPat = new RegExp(escapeRegExp(params.skipStr), 'g');
-    } else {
-        skipPat = undefined;
+    if (!skipPat && params.skipScheme) {
+        skipPat = skipSchemeMap[params.skipScheme];
     }
 
     // Precedence:
-    // - for lineBreakPat: Scheme > Regex > Str
-    // - for lineBreakStr: Scheme > Str
+    // - for lineBreakPat: Regex > Scheme > Str
+    // - for lineBreakStr: Str > Scheme > Regex
     var lineBreakScheme = params.lineBreakScheme,
-        lineBreakPat = params.lineBreakRegex,
-        lineBreakStr = params.lineBreakStr;
+        lineBreak = params.lineBreak,
+        lineBreakPat, lineBreakStr;
+
     if (lineBreakScheme) {
         // Supported schemes: 'unix', 'dos', 'mac', 'html', 'xhtml'
         var item = lineBreakSchemeMap[lineBreakScheme];
@@ -82,14 +85,41 @@ var linewrap = module.exports = function (start, stop, params) {
             lineBreakStr = item[1];
         }
     }
-    if (!(lineBreakPat instanceof RegExp)) {
-        if (lineBreakStr) {
-            lineBraekPat = new RegExp(escapeRegExp(lineBreakStr));
-        } else {
-            lineBreakPat = /\n/;
+    if (lineBreak) {
+        if (lineBreak instanceof Array) {
+            if (lineBreak.length === 1) {
+                lineBreak = lineBreak[0];
+            } else if (lineBreak.length >= 2) {
+                if (lineBreak[0] instanceof RegExp) {
+                    lineBreakPat = lineBreak[0];
+                    if (typeof lineBreak[1] === 'string') {
+                        lineBreakStr = lineBreak[1];
+                    }
+                } else if (lineBreak[1] instanceof RegExp) {
+                    lineBreakPat = lineBreak[1];
+                    if (typeof lineBreak[0] === 'string') {
+                        lineBreakStr = lineBreak[0];
+                    }
+                } else {
+                    lineBreak = lineBreak[0];
+                }
+            }
+        }
+        if (typeof lineBreak === 'string') {
+            lineBreakStr = lineBreak;
+            if (!lineBreakPat) {
+                lineBreakPat = new RegExp(escapeRegExp(lineBreak));
+            }
+        } else if (lineBreak instanceof RegExp) {
+            lineBreakPat = lineBreak;
         }
     }
-    if (!lineBreakStr) {
+    // Only assign defaults when `lineBreakPat` is not assigned.
+    // So if `params.lineBreak` is a RegExp, we don't have a value in `lineBreakStr`
+    // yet. We will try to get the value from the input string, and if failed, we
+    // will throw an exception.
+    if (!lineBreakPat) {
+        lineBreakPat = /\n/;
         lineBreakStr = '\n';
     }
 
@@ -106,11 +136,21 @@ var linewrap = module.exports = function (start, stop, params) {
     }
 
     return function (text) {
-		text = text.toString().replace(/\t/g, new Array(tabWidth + 1).join(' '));
+        text = text.toString().replace(/\t/g, new Array(tabWidth + 1).join(' '));
 
-		if (whitespace === 'collapse') {
-			text = text.replace(/  +/g, ' ');
-		}
+        if (whitespace === 'collapse') {
+            text = text.replace(/  +/g, ' ');
+        }
+
+        if (!lineBreakStr) {
+            // Try to get lineBreakStr from `text`
+            var match = text.match(lineBreakPat);
+            if (match) {
+                lineBreakStr = match[0];
+            } else {
+                throw new TypeError('Line break string for the output not specified');
+            }
+        }
 
         var segments, match, base = 0;
         if (skipPat) {
