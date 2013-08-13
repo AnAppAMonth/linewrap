@@ -110,6 +110,9 @@ var linewrap = module.exports = function (start, stop, params) {
                     if (typeof lineBreak[0] === 'string') {
                         lineBreakStr = lineBreak[0];
                     }
+                } else if (typeof lineBreak[0] === 'string' && typeof lineBreak[1] === 'string') {
+                    lineBreakPat = new RegExp(escapeRegExp(lineBreak[0]), 'g');
+                    lineBreakStr = lineBreak[1];
                 } else {
                     lineBreak = lineBreak[0];
                 }
