@@ -167,30 +167,38 @@ var linewrap = module.exports = function (start, stop, params) {
             segments = [text];
         }
 
-        var chunks = segments.reduce(function (result, segment) {
+        var i, j, k;
+        var chunks = [];
+
+        for (i = 0; i < segments.length; i++) {
+            var segment = segments[i];
             if (typeof segment === 'string') {
-                var parts = segment
-                    .split(re)
-                    .reduce(function (acc, x) {
-                        if (mode === 'hard') {
-                            for (var i = 0; i < x.length; i += stop - start) {
-                                acc.push(x.slice(i, i + stop - start));
-                            }
+                var parts = segment.split(re),
+                    acc = [];
+
+                for (j = 0; j < parts.length; j++) {
+                    var x = parts[j];
+                    if (mode === 'hard') {
+                        for (k = 0; k < x.length; k += stop - start) {
+                            acc.push(x.slice(k, k + stop - start));
                         }
-                        else acc.push(x);
-                        return acc;
-                    }, []);
-                return result.concat(parts);
+                    }
+                    else acc.push(x);
+                }
+                chunks = chunks.concat(acc);
             } else {
-                result.push(segment);
-                return result;
+                chunks.push(segment);
             }
-        }, []);
+        }
 
         var curLine = 0,
-            curLineLength = start;
-        chunks = chunks.reduce(function (lines, chunk) {
-            if (chunk === '') return lines;
+            curLineLength = start,
+            lines = [ prefix ];
+
+        for (i = 0; i < chunks.length; i++) {
+            var chunk = chunks[i];
+
+            if (chunk === '') continue;
 
             if (typeof chunk !== 'string') {
                 // Assumption: skip strings don't end with whitespaces.
@@ -200,7 +208,7 @@ var linewrap = module.exports = function (start, stop, params) {
                     }
                 }
                 lines[curLine] += chunk;
-                return lines;
+                continue;
             }
 
             var xs, curr, curr2;
@@ -234,7 +242,8 @@ var linewrap = module.exports = function (start, stop, params) {
             }
 
             if (xs) {
-                xs.forEach(function (c) {
+                for (j = 0; j < xs.length; j++) {
+                    var c = xs[j];
                     if (stripTrailingWS || curLineLength > stop) {
                         lines[curLine] = lines[curLine].replace(tPat, '$1');
                     }
@@ -244,20 +253,18 @@ var linewrap = module.exports = function (start, stop, params) {
                     lines.push(prefix + c);
                     curLine++;
                     curLineLength = start + c.length;
-                });
+                }
             }
-
-            return lines;
-        }, [ prefix ]);
+        }
 
         if (stripPrecedingWS) {
             pPat = new RegExp('^( {' + start + '})\\s+(.*)$');
-            chunks[0] = chunks[0].replace(pPat, '$1$2');
+            lines[0] = lines[0].replace(pPat, '$1$2');
         }
         if (stripTrailingWS || curLineLength > stop) {
-            chunks[curLine] = chunks[curLine].replace(tPat, '$1');
+            lines[curLine] = lines[curLine].replace(tPat, '$1');
         }
-        return chunks.join(lineBreakStr);
+        return lines.join(lineBreakStr);
     };
 };
 
