@@ -1,10 +1,10 @@
 
 // lineBreak Schemes
-var brPat = /<\s*br(?:[\s/]*|\s[^>]*)>/i;
+var brPat = /<\s*br(?:[\s/]*|\s[^>]*)>/gi;
 var lineBreakSchemeMap = {
-    'unix': [/\n/, '\n'],
-    'dos': [/\r\n/, '\r\n'],
-    'mac': [/\r/, '\r'],
+    'unix': [/\n/g, '\n'],
+    'dos': [/\r\n/g, '\r\n'],
+    'mac': [/\r/g, '\r'],
     'html': [brPat, '<br>'],
     'xhtml': [brPat, '<br/>']
 };
@@ -16,8 +16,9 @@ var skipSchemeMap = {
     'bbcode': /\[[^]]*\]/g
 };
 
+var escapePat = /[-/\\^$*+?.()|[\]{}]/g;
 function escapeRegExp(s) {
-    return s.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
+    return s.replace(escapePat, '\\$&');
 }
 
 var linewrap = module.exports = function (start, stop, params) {
@@ -44,23 +45,32 @@ var linewrap = module.exports = function (start, stop, params) {
     var whitespace = params.whitespace || 'default';
     var tabWidth = params.tabWidth || 4;
 
+    var respectLineBreaks;
+    if (params.respectLineBreaks !== undefined) {
+        respectLineBreaks = !!(params.respectLineBreaks);
+    } else {
+        respectLineBreaks = true;
+    }
+
+    // NOTE: of the two RegExps `skipPat` and `lineBreakPat`:
+    // - We require `skipPat` to be "global" and convert it to global if it isn't.
+    // - We require `lineBreakPat` to be "global" only if respectLineBreaks is
+    //   false, otherwise we don't explicitly convert it to global, and therefore
+    //   the program must be able to deal with both.
+
     // Precedence: Regex = Str > Scheme
     var skip = params.skip,
-        skipPat;
+        skipPat,
+        flags;
 
     if (skip) {
         if (skip instanceof RegExp) {
             skipPat = skip;
             if (!skipPat.global) {
-                var flags = 'g';
-                if (skipPat.ignoreCase) {
-                    flags += 'i';
-                } else if (skipPat.multiline) {
-                    flags += 'm';
-                }
+                flags = 'g';
+                if (skipPat.ignoreCase) flags += 'i';
+                if (skipPat.multiline) flags += 'm';
                 skipPat = new RegExp(skipPat.source, flags);
-            } else {
-                skipPat.lastIndex = 0;
             }
         } else if (typeof skip === 'string') {
             skipPat = new RegExp(escapeRegExp(skip), 'g');
@@ -108,7 +118,7 @@ var linewrap = module.exports = function (start, stop, params) {
         if (typeof lineBreak === 'string') {
             lineBreakStr = lineBreak;
             if (!lineBreakPat) {
-                lineBreakPat = new RegExp(escapeRegExp(lineBreak));
+                lineBreakPat = new RegExp(escapeRegExp(lineBreak), 'g');
             }
         } else if (lineBreak instanceof RegExp) {
             lineBreakPat = lineBreak;
@@ -119,8 +129,20 @@ var linewrap = module.exports = function (start, stop, params) {
     // yet. We will try to get the value from the input string, and if failed, we
     // will throw an exception.
     if (!lineBreakPat) {
-        lineBreakPat = /\n/;
+        lineBreakPat = /\n/g;
         lineBreakStr = '\n';
+    }
+
+    var stripLineBreakPat;
+    if (!respectLineBreaks) {
+        flags = 'g';
+        if (lineBreakPat.ignoreCase) flags += 'i';
+        if (lineBreakPat.multiline) flags += 'm';
+        stripLineBreakPat = new RegExp('\\s*(?:' + lineBreakPat.source + ')(?:' + lineBreakPat.source + '|\\s)*', flags);
+        // We need `lineBreakPat` to be global in this case.
+        if (!lineBreakPat.global) {
+            lineBreakPat = new RegExp(lineBreakPat.source, flags);
+        }
     }
 
     var re = mode === 'hard' ? /\b/ : /(\S+\s+)/;
@@ -130,9 +152,9 @@ var linewrap = module.exports = function (start, stop, params) {
     var pPat, tPat;
 
     if (stripTrailingWS) {
-        tPat = new RegExp('^( {' + start + '}.*?)\\s+$');
+        tPat = new RegExp('^( {' + start + '}[^]*?)\\s+$');
     } else {
-        tPat = new RegExp('^(.{' + stop + '}.*?)\\s+$');
+        tPat = new RegExp('^([^]{' + stop + '}[^]*?)\\s+$');
     }
 
     return function (text) {
@@ -144,7 +166,8 @@ var linewrap = module.exports = function (start, stop, params) {
 
         if (!lineBreakStr) {
             // Try to get lineBreakStr from `text`
-            var match = text.match(lineBreakPat);
+            lineBreakPat.lastIndex = 0;
+            var match = lineBreakPat.exec(text);
             if (match) {
                 lineBreakStr = match[0];
             } else {
@@ -152,9 +175,18 @@ var linewrap = module.exports = function (start, stop, params) {
             }
         }
 
+        if (!respectLineBreaks) {
+            // Strip line breaks and insert spaces when necessary.
+            text = text.replace(stripLineBreakPat, function(match) {
+                var res = match.replace(lineBreakPat, '');
+                return res !== '' ? res : ' ';
+            });
+        }
+
         var segments, match, base = 0;
         if (skipPat) {
             segments = [];
+            skipPat.lastIndex = 0;
             match = skipPat.exec(text);
             while(match) {
                 segments.push(text.substring(base, match.index));
@@ -212,6 +244,7 @@ var linewrap = module.exports = function (start, stop, params) {
             }
 
             var xs, curr, curr2;
+            lineBreakPat.lastIndex = 0;
             if (lineBreakPat.test(chunk)) {
                 // Don't pre-shift
                 xs = chunk.split(lineBreakPat);
@@ -258,7 +291,7 @@ var linewrap = module.exports = function (start, stop, params) {
         }
 
         if (stripPrecedingWS) {
-            pPat = new RegExp('^( {' + start + '})\\s+(.*)$');
+            pPat = new RegExp('^( {' + start + '})\\s+([^]*)$');
             lines[0] = lines[0].replace(pPat, '$1$2');
         }
         if (stripTrailingWS || curLineLength > stop) {
