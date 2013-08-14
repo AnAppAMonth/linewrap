@@ -1,4 +1,13 @@
 
+// Presets
+var presetMap = {
+    'html': {
+        skipScheme: 'html',
+        lineBreakScheme: 'html',
+        whitespace: 'collapse'
+    }
+};
+
 // lineBreak Schemes
 var brPat = /<\s*br(?:[\s/]*|\s[^>]*)>/gi;
 var lineBreakSchemeMap = {
@@ -40,16 +49,63 @@ var linewrap = module.exports = function (start, stop, params) {
     }
 
     if (!params) { params = {}; }
-    var mode = params.mode || 'soft';
-    // Availbalbe options: 'collapse', 'default', 'line', and 'all'
-    var whitespace = params.whitespace || 'default';
-    var tabWidth = params.tabWidth || 4;
+    // Supported options and default values.
+    var preset,
+        mode = 'soft',
+        whitespace = 'default',
+        tabWidth = 4,
+        skip, skipScheme, lineBreak, lineBreakScheme,
+        respectLineBreaks = true;
 
-    var respectLineBreaks;
+    var skipPat;
+    var lineBreakPat, lineBreakStr;
+    var stripLineBreakPat;
+    var item, flags;
+
+    // First process presets, because these settings can be overwritten later.
+    preset = params.preset;
+    if (preset) {
+        item = presetMap[preset];
+        if (item) {
+            if (item.mode) {
+                mode = item.mode;
+            }
+            if (item.whitespace) {
+                whitespace = item.whitespace;
+            }
+            if (item.tabWidth) {
+                tabWidth = item.tabWidth;
+            }
+            if (item.skip) {
+                skip = item.skip;
+            }
+            if (item.skipScheme) {
+                skipScheme = item.skipScheme;
+            }
+            if (item.lineBreak) {
+                lineBreak = item.lineBreak;
+            }
+            if (item.lineBreakScheme) {
+                lineBreakScheme = item.lineBreakScheme;
+            }
+            if (item.respectLineBreaks !== undefined) {
+                respectLineBreaks = item.respectLineBreaks;
+            }
+        }
+    }
+
+    if (params.mode) {
+        mode = params.mode;
+    }
+    // Availbalbe options: 'collapse', 'default', 'line', and 'all'
+    if (params.whitespace) {
+        whitespace = params.whitespace;
+    }
+    if (params.tabWidth) {
+        tabWidth = params.tabWidth;
+    }
     if (params.respectLineBreaks !== undefined) {
         respectLineBreaks = !!(params.respectLineBreaks);
-    } else {
-        respectLineBreaks = true;
     }
 
     // NOTE: For the two RegExps `skipPat` and `lineBreakPat` that can be specified
@@ -60,9 +116,12 @@ var linewrap = module.exports = function (start, stop, params) {
     //          capturing parentheses which affect the output of `split()`.
 
     // Precedence: Regex = Str > Scheme
-    var skip = params.skip,
-        skipPat,
-        flags;
+    if (params.skipScheme) {
+        skipScheme = params.skipScheme;
+    }
+    if (params.skip) {
+        skip = params.skip;
+    }
 
     if (skip) {
         if (skip instanceof RegExp) {
@@ -77,20 +136,23 @@ var linewrap = module.exports = function (start, stop, params) {
             skipPat = new RegExp(escapeRegExp(skip), 'g');
         }
     }
-    if (!skipPat && params.skipScheme) {
-        skipPat = skipSchemeMap[params.skipScheme];
+    if (!skipPat && skipScheme) {
+        skipPat = skipSchemeMap[skipScheme];
     }
 
     // Precedence:
     // - for lineBreakPat: Regex > Scheme > Str
     // - for lineBreakStr: Str > Scheme > Regex
-    var lineBreakScheme = params.lineBreakScheme,
-        lineBreak = params.lineBreak,
-        lineBreakPat, lineBreakStr;
+    if (params.lineBreakScheme) {
+        lineBreakScheme = params.lineBreakScheme;
+    }
+    if (params.lineBreak) {
+        lineBreak = params.lineBreak;
+    }
 
     if (lineBreakScheme) {
         // Supported schemes: 'unix', 'dos', 'mac', 'html', 'xhtml'
-        var item = lineBreakSchemeMap[lineBreakScheme];
+        item = lineBreakSchemeMap[lineBreakScheme];
         if (item) {
             lineBreakPat = item[0];
             lineBreakStr = item[1];
@@ -137,7 +199,8 @@ var linewrap = module.exports = function (start, stop, params) {
         lineBreakStr = '\n';
     }
 
-    var stripLineBreakPat;
+    // Convert `lineBreakPat` to global if not already.
+    // Create `stripLineBreakPat` when needed.
     if (!respectLineBreaks || !lineBreakPat.global) {
         flags = 'g';
         if (lineBreakPat.ignoreCase) { flags += 'i'; }
@@ -151,6 +214,7 @@ var linewrap = module.exports = function (start, stop, params) {
         }
     }
 
+    // Initialize other useful variables.
     var re = mode === 'hard' ? /\b/ : /(\S+\s+)/;
     var prefix = new Array(start + 1).join(' ');
     var stripPrecedingWS = !(whitespace === 'line' || whitespace === 'all'),
