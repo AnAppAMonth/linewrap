@@ -52,11 +52,12 @@ var linewrap = module.exports = function (start, stop, params) {
         respectLineBreaks = true;
     }
 
-    // NOTE: of the two RegExps `skipPat` and `lineBreakPat`:
-    // - We require `skipPat` to be "global" and convert it to global if it isn't.
-    // - We require `lineBreakPat` to be "global" only if respectLineBreaks is
-    //   false, otherwise we don't explicitly convert it to global, and therefore
-    //   the program must be able to deal with both.
+    // NOTE: For the two RegExps `skipPat` and `lineBreakPat` that can be specified
+    //       by the user:
+    //       1. We require them to be "global", so we have to convert them to global
+    //          if the user specifies a non-global regex.
+    //       2. We cannot call `split()` on them, because they may or may not contain
+    //          capturing parentheses which affect the output of `split()`.
 
     // Precedence: Regex = Str > Scheme
     var skip = params.skip,
@@ -137,12 +138,14 @@ var linewrap = module.exports = function (start, stop, params) {
     }
 
     var stripLineBreakPat;
-    if (!respectLineBreaks) {
+    if (!respectLineBreaks || !lineBreakPat.global) {
         flags = 'g';
         if (lineBreakPat.ignoreCase) { flags += 'i'; }
         if (lineBreakPat.multiline) { flags += 'm'; }
-        stripLineBreakPat = new RegExp('\\s*(?:' + lineBreakPat.source + ')(?:' + lineBreakPat.source + '|\\s)*', flags);
-        // We need `lineBreakPat` to be global in this case.
+        if (!respectLineBreaks) {
+            stripLineBreakPat = new RegExp('\\s*(?:' + lineBreakPat.source + ')(?:' +
+                                           lineBreakPat.source + '|\\s)*', flags);
+        }
         if (!lineBreakPat.global) {
             lineBreakPat = new RegExp(lineBreakPat.source, flags);
         }
@@ -179,34 +182,57 @@ var linewrap = module.exports = function (start, stop, params) {
             }
         }
 
+        // text -> blocks; each bloc -> segments; each segment -> chunks
+        var blocks, base = 0;
         if (!respectLineBreaks) {
             // Strip line breaks and insert spaces when necessary.
             text = text.replace(stripLineBreakPat, function(match) {
                 var res = match.replace(lineBreakPat, '');
                 return res !== '' ? res : ' ';
             });
-        }
-
-        var segments, base = 0;
-        if (skipPat) {
-            segments = [];
-            skipPat.lastIndex = 0;
-            match = skipPat.exec(text);
-            while(match) {
-                segments.push(text.substring(base, match.index));
-                /* jshint -W053 */
-                segments.push(new String(match[0]));
-                base = match.index + match[0].length;
-                match = skipPat.exec(text);
-            }
-            segments.push(text.substring(base));
+            blocks = [text];
         } else {
-            segments = [text];
+            // Split `text` by line breaks.
+            blocks = [];
+            lineBreakPat.lastIndex = 0;
+            match = lineBreakPat.exec(text);
+            while(match) {
+                blocks.push(text.substring(base, match.index));
+                // We use 0 to mark line breaks.
+                blocks.push(0);
+                base = match.index + match[0].length;
+                match = lineBreakPat.exec(text);
+            }
+            blocks.push(text.substring(base));
         }
 
         var i, j, k;
-        var chunks = [];
+        var segments;
+        if (skipPat) {
+            segments = [];
+            for (i = 0; i < blocks.length; i++) {
+                var bloc = blocks[i];
+                if (bloc === 0) {
+                    segments.push(bloc);
+                } else {
+                    base = 0;
+                    skipPat.lastIndex = 0;
+                    match = skipPat.exec(bloc);
+                    while(match) {
+                        segments.push(bloc.substring(base, match.index));
+                        /* jshint -W053 */
+                        segments.push(new String(match[0]));
+                        base = match.index + match[0].length;
+                        match = skipPat.exec(bloc);
+                    }
+                    segments.push(bloc.substring(base));
+                }
+            }
+        } else {
+            segments = blocks;
+        }
 
+        var chunks = [];
         for (i = 0; i < segments.length; i++) {
             var segment = segments[i];
             if (typeof segment === 'string') {
@@ -224,20 +250,35 @@ var linewrap = module.exports = function (start, stop, params) {
                 }
                 chunks = chunks.concat(acc);
             } else {
+                // Can be `String` objects or 0.
                 chunks.push(segment);
             }
         }
 
         var curLine = 0,
             curLineLength = start,
-            lines = [ prefix ];
+            lines = [ prefix ],
+            newLine = true;
 
         for (i = 0; i < chunks.length; i++) {
             var chunk = chunks[i];
 
             if (chunk === '') { continue; }
 
+            if (chunk === 0) {
+                // This is a line break.
+                if (stripTrailingWS || curLineLength > stop) {
+                    lines[curLine] = lines[curLine].replace(tPat, '$1');
+                }
+                lines.push(prefix);
+                curLine++;
+                curLineLength = start;
+                newLine = true;
+                continue;
+            }
+
             if (typeof chunk !== 'string') {
+                // This is a skip string.
                 // Assumption: skip strings don't end with whitespaces.
                 if (curLineLength >= stop) {
                     if (stripTrailingWS || curLineLength > stop) {
@@ -248,57 +289,36 @@ var linewrap = module.exports = function (start, stop, params) {
                 continue;
             }
 
-            var xs, curr, curr2;
-            lineBreakPat.lastIndex = 0;
-            if (lineBreakPat.test(chunk)) {
-                // Don't pre-shift
-                xs = chunk.split(lineBreakPat);
-                curr = xs[0];
-            } else {
-                // Pre-shift
-                xs = null;
-                curr = chunk;
-            }
-
-            if (curLineLength + curr.length > stop &&
-                    curLineLength + (curr2 = curr.replace(/\s+$/, '')).length > stop &&
-                    curr2 !== '' &&
+            var chunk2;
+            if (curLineLength + chunk.length > stop &&
+                    curLineLength + (chunk2 = chunk.replace(/\s+$/, '')).length > stop &&
+                    chunk2 !== '' &&
                     curLineLength > start) {
-                // This line is full, add `curr` to the next line
-                if (!xs) {
-                    // Unshift since we pre-shifted
-                    xs = [curr];
+                // This line is full, add `chunk` to the next line
+                if (stripTrailingWS || curLineLength > stop) {
+                    lines[curLine] = lines[curLine].replace(tPat, '$1');
                 }
+                if (stripPrecedingWS) {
+                    chunk = chunk.replace(/^\s+/, '');
+                }
+                lines.push(prefix + chunk);
+                curLine++;
+                curLineLength = start + chunk.length;
             } else {
-                // Add `curr` to this line
-                if (xs) {
-                    // Shift since we didn't pre-shift
-                    xs.shift();
-                }
-                lines[curLine] += curr;
-                curLineLength += curr.length;
-            }
-
-            if (xs) {
-                for (j = 0; j < xs.length; j++) {
-                    var c = xs[j];
-                    if (stripTrailingWS || curLineLength > stop) {
-                        lines[curLine] = lines[curLine].replace(tPat, '$1');
-                    }
+                // Add `chunk` to this line
+                if (newLine) {
                     if (stripPrecedingWS) {
-                        c = c.replace(/^\s+/, '');
+                        chunk = chunk.replace(/^\s+/, '');
                     }
-                    lines.push(prefix + c);
-                    curLine++;
-                    curLineLength = start + c.length;
+                    if (chunk !== '') {
+                        newLine = false;
+                    }
                 }
+                lines[curLine] += chunk;
+                curLineLength += chunk.length;
             }
         }
 
-        if (stripPrecedingWS) {
-            pPat = new RegExp('^( {' + start + '})\\s+([^]*)$');
-            lines[0] = lines[0].replace(pPat, '$1$2');
-        }
         if (stripTrailingWS || curLineLength > stop) {
             lines[curLine] = lines[curLine].replace(tPat, '$1');
         }
