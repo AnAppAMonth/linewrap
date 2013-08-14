@@ -262,8 +262,7 @@ var linewrap = module.exports = function (start, stop, params) {
             match = lineBreakPat.exec(text);
             while(match) {
                 blocks.push(text.substring(base, match.index));
-                // We use 0 to mark line breaks.
-                blocks.push(0);
+                blocks.push({type: 'break'});
                 base = match.index + match[0].length;
                 match = lineBreakPat.exec(text);
             }
@@ -276,7 +275,8 @@ var linewrap = module.exports = function (start, stop, params) {
             segments = [];
             for (i = 0; i < blocks.length; i++) {
                 var bloc = blocks[i];
-                if (bloc === 0) {
+                if (typeof bloc !== 'string') {
+                    // This is an object.
                     segments.push(bloc);
                 } else {
                     base = 0;
@@ -284,8 +284,7 @@ var linewrap = module.exports = function (start, stop, params) {
                     match = skipPat.exec(bloc);
                     while(match) {
                         segments.push(bloc.substring(base, match.index));
-                        /* jshint -W053 */
-                        segments.push(new String(match[0]));
+                        segments.push({type: 'skip', value: match[0]});
                         base = match.index + match[0].length;
                         match = skipPat.exec(bloc);
                     }
@@ -299,7 +298,10 @@ var linewrap = module.exports = function (start, stop, params) {
         var chunks = [];
         for (i = 0; i < segments.length; i++) {
             var segment = segments[i];
-            if (typeof segment === 'string') {
+            if (typeof segment !== 'string') {
+                // This is an object.
+                chunks.push(segment);
+            } else {
                 var parts = segment.split(re),
                     acc = [];
 
@@ -313,9 +315,6 @@ var linewrap = module.exports = function (start, stop, params) {
                     else { acc.push(x); }
                 }
                 chunks = chunks.concat(acc);
-            } else {
-                // Can be `String` objects or 0.
-                chunks.push(segment);
             }
         }
 
@@ -329,27 +328,26 @@ var linewrap = module.exports = function (start, stop, params) {
 
             if (chunk === '') { continue; }
 
-            if (chunk === 0) {
-                // This is a line break.
-                if (stripTrailingWS || curLineLength > stop) {
-                    lines[curLine] = lines[curLine].replace(tPat, '$1');
-                }
-                lines.push(prefix);
-                curLine++;
-                curLineLength = start;
-                newLine = true;
-                continue;
-            }
-
             if (typeof chunk !== 'string') {
-                // This is a skip string.
-                // Assumption: skip strings don't end with whitespaces.
-                if (curLineLength >= stop) {
+                if (chunk.type === 'break') {
+                    // This is a line break.
                     if (stripTrailingWS || curLineLength > stop) {
                         lines[curLine] = lines[curLine].replace(tPat, '$1');
                     }
+                    lines.push(prefix);
+                    curLine++;
+                    curLineLength = start;
+                    newLine = true;
+                } else if (chunk.type === 'skip') {
+                    // This is a skip string.
+                    // Assumption: skip strings don't end with whitespaces.
+                    if (curLineLength >= stop) {
+                        if (stripTrailingWS || curLineLength > stop) {
+                            lines[curLine] = lines[curLine].replace(tPat, '$1');
+                        }
+                    }
+                    lines[curLine] += chunk.value;
                 }
-                lines[curLine] += chunk;
                 continue;
             }
 
