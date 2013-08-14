@@ -25,6 +25,18 @@ var skipSchemeMap = {
     'bbcode': /\[[^]]*\]/g
 };
 
+var modeMap = {
+    'soft': 1,
+    'hard': 1
+};
+
+var wsMap = {
+    'collapse': 1,
+    'default': 1,
+    'line': 1,
+    'all': 1
+};
+
 var escapePat = /[-/\\^$*+?.()|[\]{}]/g;
 function escapeRegExp(s) {
     return s.replace(escapePat, '\\$&');
@@ -94,15 +106,15 @@ var linewrap = module.exports = function (start, stop, params) {
         }
     }
 
-    if (params.mode) {
+    if (params.mode && modeMap[params.mode]) {
         mode = params.mode;
     }
-    // Availbalbe options: 'collapse', 'default', 'line', and 'all'
-    if (params.whitespace) {
+    // Available options: 'collapse', 'default', 'line', and 'all'
+    if (params.whitespace && wsMap[params.whitespace]) {
         whitespace = params.whitespace;
     }
-    if (params.tabWidth) {
-        tabWidth = params.tabWidth;
+    if (params.tabWidth && parseInt(params.tabWidth, 10) >= 0) {
+        tabWidth = parseInt(params.tabWidth, 10);
     }
     if (params.respectLineBreaks !== undefined) {
         respectLineBreaks = !!(params.respectLineBreaks);
