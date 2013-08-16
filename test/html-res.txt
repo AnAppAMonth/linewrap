@@ -34,7 +34,7 @@ response.<sup class="noprint Inline-Template" style="white-space:nowrap;">[<i><a
 any character that is typed
 with the alt key down. This
 creates ambiguity for
-uppercase letters and symbols<i>
+uppercase letters and symbols <i>
 @[\]^_</i>, which would form C1
 codes.<sup class="noprint Inline-Template" style="white-space:nowrap;">[<i><a href="/wiki/Wikipedia:Please_clarify" title="Wikipedia:Please clarify"><span title="The text near this tag may need clarification or removal of jargon. (November 2010)">clarification needed</span></a></i>]</sup></li>
 <li><a href="/wiki/Konsole" title="Konsole">Konsole</a> generates <code>SS3 <i>

@@ -18,7 +18,7 @@ if (require.main === module) {
                  linewrap(30, 60, {skipScheme: 'html'}),
                  linewrap(30, {lineBreakScheme: 'html'}),
                  linewrap(30, {skipScheme: 'html', lineBreakScheme: 'html'}),
-                 linewrap(30, {lineBreakScheme: 'html', respectLineBreaks: false})];
+                 linewrap(30, {lineBreakScheme: 'html', respectLineBreaks: 'none'})];
 
     var inputs = [idleness, idleness, idleness, idleness, idleness, idleness, html, html, br, br, br];
     var titles = ['linewrap(80), txt', 'wordwrap(80), txt', 'linewrap(10), txt',

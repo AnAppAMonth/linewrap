@@ -9,9 +9,9 @@ var brPat = /<\s*br(?:[\s/]*|\s[^>]*)>/i;
 exports.stop30 = function () {
     var wrap = linewrap(30, {lineBreakScheme: 'html'}),
         wrapLF = linewrap(30, {lineBreakScheme: 'html', lineBreak: '\n'}),
-        wrapNR = linewrap(30, {lineBreakScheme: 'html', respectLineBreaks: false}),
+        wrapNR = linewrap(30, {lineBreakScheme: 'html', respectLineBreaks: 'none'}),
         wrapS = linewrap(30, {skipScheme: 'html', lineBreakScheme: 'html'}),
-        wrapSNR = linewrap(30, {skipScheme: 'html', lineBreakScheme: 'html', respectLineBreaks: false});
+        wrapSNR = linewrap(30, {skipScheme: 'html', lineBreakScheme: 'html', respectLineBreaks: 'none'});
 
     var text = data.text,
         res = wrap(text),
