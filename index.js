@@ -82,35 +82,41 @@ var linewrap = module.exports = function (start, stop, params) {
     var multiLineBreakPat;
     var tabRepl;
     var item, flags;
+    var i;
 
     // First process presets, because these settings can be overwritten later.
     preset = params.preset;
     if (preset) {
-        item = presetMap[preset];
-        if (item) {
-            if (item.mode) {
-                mode = item.mode;
-            }
-            if (item.whitespace) {
-                whitespace = item.whitespace;
-            }
-            if (item.tabWidth) {
-                tabWidth = item.tabWidth;
-            }
-            if (item.skip) {
-                skip = item.skip;
-            }
-            if (item.skipScheme) {
-                skipScheme = item.skipScheme;
-            }
-            if (item.lineBreak) {
-                lineBreak = item.lineBreak;
-            }
-            if (item.lineBreakScheme) {
-                lineBreakScheme = item.lineBreakScheme;
-            }
-            if (item.respectLineBreaks) {
-                respectLineBreaks = item.respectLineBreaks;
+        if (!(preset instanceof Array)) {
+            preset = [preset];
+        }
+        for (i = 0; i < preset.length; i++) {
+            item = presetMap[preset[i]];
+            if (item) {
+                if (item.mode) {
+                    mode = item.mode;
+                }
+                if (item.whitespace) {
+                    whitespace = item.whitespace;
+                }
+                if (item.tabWidth) {
+                    tabWidth = item.tabWidth;
+                }
+                if (item.skip) {
+                    skip = item.skip;
+                }
+                if (item.skipScheme) {
+                    skipScheme = item.skipScheme;
+                }
+                if (item.lineBreak) {
+                    lineBreak = item.lineBreak;
+                }
+                if (item.lineBreakScheme) {
+                    lineBreakScheme = item.lineBreakScheme;
+                }
+                if (item.respectLineBreaks) {
+                    respectLineBreaks = item.respectLineBreaks;
+                }
             }
         }
     }
