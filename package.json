@@ -1,7 +1,7 @@
 {
     "name" : "linewrap",
     "description" : "Wrap those words. Show them at what columns to start and stop.",
-    "version" : "0.0.3",
+    "version" : "0.2.0",
     "repository" : {
         "type" : "git",
         "url" : "git://github.com/halfninety/node-linewrap.git"
@@ -10,6 +10,9 @@
     "keywords" : [
         "word",
         "wrap",
+        "line",
+        "paragraph",
+        "text",
         "rule",
         "format",
         "column"
