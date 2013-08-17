@@ -37,7 +37,7 @@ exports.stop30 = function () {
 };
 
 exports.start10stop40 = function () {
-    var wrapDS = linewrap(10, 40, {whitespace: 'invalid value'}),
+    var wrapDS = linewrap(10, 40, {whitespace: 'default'}),
         wrapCS = linewrap(10, 40, {whitespace: 'collapse'}),
         wrapLS = linewrap(10, 40, {whitespace: 'line'}),
         wrapAS = linewrap(10, 40, {whitespace: 'all'});

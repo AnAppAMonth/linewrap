@@ -117,20 +117,34 @@ var linewrap = module.exports = function (start, stop, params) {
                 if (item.respectLineBreaks) {
                     respectLineBreaks = item.respectLineBreaks;
                 }
+            } else {
+                throw new TypeError('preset must be one of "' + Object.keys(presetMap).join('", "') + '"');
             }
         }
     }
 
-    if (params.mode && modeMap[params.mode]) {
-        mode = params.mode;
+    if (params.mode) {
+        if (modeMap[params.mode]) {
+            mode = params.mode;
+        } else {
+            throw new TypeError('mode must be one of "' + Object.keys(modeMap).join('", "') + '"');
+        }
     }
     // Available options: 'collapse', 'default', 'line', and 'all'
-    if (params.whitespace && wsMap[params.whitespace]) {
-        whitespace = params.whitespace;
+    if (params.whitespace) {
+        if (wsMap[params.whitespace]) {
+            whitespace = params.whitespace;
+        } else {
+            throw new TypeError('whitespace must be one of "' + Object.keys(wsMap).join('", "') + '"');
+        }
     }
 
-    if (params.tabWidth && parseInt(params.tabWidth, 10) >= 0) {
-        tabWidth = parseInt(params.tabWidth, 10);
+    if (params.tabWidth) {
+        if (parseInt(params.tabWidth, 10) >= 0) {
+            tabWidth = parseInt(params.tabWidth, 10);
+        } else {
+            throw new TypeError('tabWidth must be a non-negative integer');
+        }
     }
     tabRepl = new Array(tabWidth + 1).join(' ');
 
@@ -138,6 +152,9 @@ var linewrap = module.exports = function (start, stop, params) {
     if (params.respectLineBreaks) {
         if (rlbMap[params.respectLineBreaks] || rlbSMPat.test(params.respectLineBreaks)) {
             respectLineBreaks = params.respectLineBreaks;
+        } else {
+            throw new TypeError('respectLineBreaks must be one of "' + Object.keys(rlbMap).join('", "') +
+                                '", "m<num>", "s<num>"');
         }
     }
     // After these conversions, now we have 4 options in `respectLineBreaks`:
@@ -161,7 +178,11 @@ var linewrap = module.exports = function (start, stop, params) {
 
     // Precedence: Regex = Str > Scheme
     if (params.skipScheme) {
-        skipScheme = params.skipScheme;
+        if (skipSchemeMap[params.skipScheme]) {
+            skipScheme = params.skipScheme;
+        } else {
+            throw new TypeError('skipScheme must be one of "' + Object.keys(skipSchemeMap).join('", "') + '"');
+        }
     }
     if (params.skip) {
         skip = params.skip;
@@ -178,6 +199,8 @@ var linewrap = module.exports = function (start, stop, params) {
             }
         } else if (typeof skip === 'string') {
             skipPat = new RegExp(escapeRegExp(skip), 'g');
+        } else {
+            throw new TypeError('skip must be either a RegExp object or a string');
         }
     }
     if (!skipPat && skipScheme) {
@@ -188,7 +211,11 @@ var linewrap = module.exports = function (start, stop, params) {
     // - for lineBreakPat: Regex > Scheme > Str
     // - for lineBreakStr: Str > Scheme > Regex
     if (params.lineBreakScheme) {
-        lineBreakScheme = params.lineBreakScheme;
+        if (lineBreakSchemeMap[params.lineBreakScheme]) {
+            lineBreakScheme = params.lineBreakScheme;
+        } else {
+            throw new TypeError('lineBreakScheme must be one of "' + Object.keys(lineBreakSchemeMap).join('", "') + '"');
+        }
     }
     if (params.lineBreak) {
         lineBreak = params.lineBreak;
@@ -232,6 +259,8 @@ var linewrap = module.exports = function (start, stop, params) {
             }
         } else if (lineBreak instanceof RegExp) {
             lineBreakPat = lineBreak;
+        } else if (!(lineBreak instanceof Array)) {
+            throw new TypeError('lineBreak must be a RegExp object, a string, or an array consisted of a RegExp object and a string');
         }
     }
     // Only assign defaults when `lineBreakPat` is not assigned.
