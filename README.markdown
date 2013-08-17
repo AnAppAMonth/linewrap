@@ -11,6 +11,10 @@ Linewrap is *almost* backwards compatible with wordwrap. The behavior only diffe
 in some edge cases where I believe wordwrap didn't make the best choice. You probably
 won't notice any difference in normal usage.
 
+Install
+=======
+
+    npm install linewrap
 
 Usage
 =====
@@ -132,6 +136,7 @@ some lines but not others.
    lines preserved from the input (not wrapped by us). This option can be used
    with the `"s<num>"` options of `respectLineBreaks` to support the indenting
    paragraphing style, so that the indentations to mark new paragraphs are preserved.
+   Preceding whitespaces are also significant in markup languages like Markdown.
 4. `"all"`. All whitespaces are preserved. In this mode, whitespaces are treated
    like other non-alphabetical characters that are displayed but can be wrapped
    at any position.
