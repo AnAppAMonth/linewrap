@@ -1,10 +1,10 @@
 {
     "name" : "linewrap",
-    "description" : "Wrap those words. Show them at what columns to start and stop.",
+    "description" : "Word wrapping with HTML, ANSI color code, indentation and paragraphing support.",
     "version" : "0.2.0",
     "repository" : {
         "type" : "git",
-        "url" : "git://github.com/halfninety/node-linewrap.git"
+        "url" : "git://github.com/halfninety/linewrap.git"
     },
     "main" : "./index.js",
     "keywords" : [
@@ -13,6 +13,8 @@
         "line",
         "paragraph",
         "text",
+        "string",
+        "indent",
         "rule",
         "format",
         "column"
