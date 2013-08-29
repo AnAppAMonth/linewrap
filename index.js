@@ -99,7 +99,7 @@ var linewrap = module.exports = function (start, stop, params) {
                 if (item.whitespace) {
                     whitespace = item.whitespace;
                 }
-                if (item.tabWidth) {
+                if (item.tabWidth !== undefined) {
                     tabWidth = item.tabWidth;
                 }
                 if (item.skip) {
@@ -139,7 +139,7 @@ var linewrap = module.exports = function (start, stop, params) {
         }
     }
 
-    if (params.tabWidth) {
+    if (params.tabWidth !== undefined) {
         if (parseInt(params.tabWidth, 10) >= 0) {
             tabWidth = parseInt(params.tabWidth, 10);
         } else {
