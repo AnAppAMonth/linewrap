@@ -142,6 +142,39 @@ some lines but not others.
    at any position.
 
 
+Additional indentation in wrapped lines
+----------------------------------------
+
+**Relevant option**: `wrapLineIndent`, `wrapLineIndentBase`.
+
+This option applies additional indentation to wrapped lines. This allows fine control
+over the alignment of wrapped text, illustrated in the following example:
+
+    Red: the color of blood, rubies
+         and strawberries.
+    Green: the color of growing grass
+           and leaves, of emeralds,
+           and of jade.
+    Blue: the color of the clear sky
+          and the deep sea.
+
+**Supported values** of `wrapLineIndentBase`:
+
+1. `RegExp`.
+2. `string`.
+
+`wrapLineIndent` must be an integer specifying the amount of the indentation. If only
+`wrapLineIndent` is specified, it must be a non-negative integer, and all wrapped lines
+are indented by this amount. If `wrapLineIndentBase` is also specified, it's searched
+in each preserved line: if found, all wrapped lines belonging to this preserved line
+are indented by the sum of `wrapLineIndent` and the index of the match (if the sum is
+a positive integer); if not found, the wrapped lines belonging to this preserved line
+are not indented.
+
+For example, `wrapLineIndentBase: ':', wrapLineIndent: 2` can be used to generate the
+result in the above example.
+
+
 Hard wrapping
 -------------
 

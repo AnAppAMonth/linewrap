@@ -75,11 +75,13 @@ var linewrap = module.exports = function (start, stop, params) {
         tabWidth = 4,
         skip, skipScheme, lineBreak, lineBreakScheme,
         respectLineBreaks = 'all',
-        respectNum;
+        respectNum,
+        wrapLineIndent, wrapLineIndentBase;
 
     var skipPat;
     var lineBreakPat, lineBreakStr;
     var multiLineBreakPat;
+    var wrapLineIndentPat, wrapLineInitPrefix = '';
     var tabRepl;
     var item, flags;
     var i;
@@ -116,6 +118,12 @@ var linewrap = module.exports = function (start, stop, params) {
                 }
                 if (item.respectLineBreaks) {
                     respectLineBreaks = item.respectLineBreaks;
+                }
+                if (item.wrapLineIndent !== undefined) {
+                    wrapLineIndent = item.wrapLineIndent;
+                }
+                if (item.wrapLineIndentBase) {
+                    wrapLineIndentBase = item.wrapLineIndentBase;
                 }
             } else {
                 throw new TypeError('preset must be one of "' + Object.keys(presetMap).join('", "') + '"');
@@ -167,6 +175,34 @@ var linewrap = module.exports = function (start, stop, params) {
         var match = rlbSMPat.exec(respectLineBreaks);
         respectLineBreaks = match[1];
         respectNum = parseInt(match[2], 10);
+    }
+
+    if (params.wrapLineIndent !== undefined) {
+        if (!isNaN(parseInt(params.wrapLineIndent, 10))) {
+            wrapLineIndent = parseInt(params.wrapLineIndent, 10);
+        } else {
+            throw new TypeError('wrapLineIndent must be an integer');
+        }
+    }
+    if (params.wrapLineIndentBase) {
+        wrapLineIndentBase = params.wrapLineIndentBase;
+    }
+
+    if (wrapLineIndentBase) {
+        if (wrapLineIndent === undefined) {
+            throw new TypeError('wrapLineIndent must be specified when wrapLineIndentBase is specified');
+        }
+        if (wrapLineIndentBase instanceof RegExp) {
+            wrapLineIndentPat = wrapLineIndentBase;
+        } else if (typeof wrapLineIndentBase === 'string') {
+            wrapLineIndentPat = new RegExp(escapeRegExp(wrapLineIndentBase));
+        } else {
+            throw new TypeError('wrapLineIndentBase must be either a RegExp object or a string');
+        }
+    } else if (wrapLineIndent > 0) {
+        wrapLineInitPrefix = new Array(wrapLineIndent + 1).join(' ');
+    } else if (wrapLineIndent < 0) {
+        throw new TypeError('wrapLineIndent must be non-negative when a base is not specified');
     }
 
     // NOTE: For the two RegExps `skipPat` and `lineBreakPat` that can be specified
@@ -427,6 +463,8 @@ var linewrap = module.exports = function (start, stop, params) {
             // whether a whitespace is at the beginning of a preserved input line and
             // should not be stripped.
             preservedLine = true,
+            // The current indent prefix for wrapped lines.
+            wrapLinePrefix = wrapLineInitPrefix,
             remnant,
             lines = [ prefix ];
 
@@ -471,10 +509,23 @@ var linewrap = module.exports = function (start, stop, params) {
                 bulge = 0;
             }
 
-            if (preservedLine && !beforeHardBreak) {
+            // Bug: the current implementation of `wrapLineIndent` is buggy: we are not
+            // taking the extra space occupied by the additional indentation into account
+            // when wrapping the line. For example, in "hard" mode, we should hard-wrap
+            // long words at `wrapLen - wrapLinePrefix.length` instead of `wrapLen`;
+            // and remnants should also be wrapped at `wrapLen - wrapLinePrefix.length`.
+            if (preservedLine) {
                 // This is a preserved line, and the next output line isn't a
                 // preserved line.
                 preservedLine = false;
+                if (wrapLineIndentPat) {
+                    idx = lines[curLine].substring(start).search(wrapLineIndentPat);
+                    if (idx >= 0 && idx + wrapLineIndent > 0) {
+                        wrapLinePrefix = new Array(idx + wrapLineIndent + 1).join(' ');
+                    } else {
+                        wrapLinePrefix = '';
+                    }
+                }
             }
 
             // Some remnants are left to the next line.
@@ -482,9 +533,9 @@ var linewrap = module.exports = function (start, stop, params) {
                 while (rBase + wrapLen < str.length) {
                     if (wsAll) {
                         ln = str.substring(rBase, rBase + wrapLen);
-                        lines.push(prefix + ln);
+                        lines.push(prefix + wrapLinePrefix + ln);
                     } else {
-                        lines.push(prefix);
+                        lines.push(prefix + wrapLinePrefix);
                     }
                     rBase += wrapLen;
                     curLine++;
@@ -492,14 +543,14 @@ var linewrap = module.exports = function (start, stop, params) {
                 if (beforeHardBreak) {
                     if (wsAll) {
                         ln = str.substring(rBase);
-                        lines.push(prefix + ln);
+                        lines.push(prefix + wrapLinePrefix + ln);
                     } else {
-                        lines.push(prefix);
+                        lines.push(prefix + wrapLinePrefix);
                     }
                     curLine++;
                 } else {
                     ln = str.substring(rBase);
-                    return ln;
+                    return wrapLinePrefix + ln;
                 }
             }
 
@@ -626,9 +677,9 @@ var linewrap = module.exports = function (start, stop, params) {
                     if (curLineLength > stop) {
                         remnant = finishOffCurLine(false);
 
-                        lines.push(prefix);
+                        lines.push(prefix + wrapLinePrefix);
                         curLine++;
-                        curLineLength = start;
+                        curLineLength = start + wrapLinePrefix.length;
 
                         if (remnant) {
                             lines[curLine] += remnant;
@@ -652,9 +703,9 @@ var linewrap = module.exports = function (start, stop, params) {
                     // This line is full, add `chunk` to the next line
                     remnant = finishOffCurLine(false);
 
-                    lines.push(prefix);
+                    lines.push(prefix + wrapLinePrefix);
                     curLine++;
-                    curLineLength = start;
+                    curLineLength = start + wrapLinePrefix.length;
 
                     if (remnant) {
                         lines[curLine] += remnant;
