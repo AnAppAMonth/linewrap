@@ -419,17 +419,14 @@ var linewrap = module.exports = function (start, stop, params) {
             // to whitespaces.
             //
             // This variable is used to allow us strip preceding whitespaces when
-            // `wsStrip` is true, or `wsLine` is true and `newLine` is false.
+            // `wsStrip` is true, or `wsLine` is true and `preservedLine` is false.
             cleanLine = true,
-            // `newLine` is true iff we are at the beginning of a preserved input line.
-            // Obviously when `newLine` is true, `cleanLine` must also be true.
+            // `preservedLine` is true iff we are in a preserved input line.
             //
-            // Note that if the input line has many preceding whitespaces, it can have
-            // wrapped in the output, and `newLine` would still be true.
-            //
-            // It's used when `wsLine` is true to decide whether a whitespace is at
-            // the beginning of a preserved input line and should not be stripped.
-            newLine = true,
+            // It's used when `wsLine` is true to (combined with `cleanLine`) decide
+            // whether a whitespace is at the beginning of a preserved input line and
+            // should not be stripped.
+            preservedLine = true,
             remnant,
             lines = [ prefix ];
 
@@ -437,11 +434,10 @@ var linewrap = module.exports = function (start, stop, params) {
         //
         // Assumption: Each call of this function is always followed by a `lines.push()` call.
         //
-        // This function doesn't change the status of `newLine`, but it can change the status
-        // of `cleanLine`. However, we don't modify the value of `cleanLine` in this function.
-        // It's fine because `cleanLine` will be set to the correct value after the `lines.push()`
-        // call following this function call. We also don't update `curLineLength` when pushing
-        // a new line and it's safe for the same reason.
+        // This function can change the status of `cleanLine`, but we don't modify the value of
+        // `cleanLine` in this function. It's fine because `cleanLine` will be set to the correct
+        // value after the `lines.push()` call following this function call. We also don't update
+        // `curLineLength` when pushing a new line and it's safe for the same reason.
         function finishOffCurLine(beforeHardBreak) {
             var str = lines[curLine],
                 idx, ln, rBase;
@@ -457,7 +453,7 @@ var linewrap = module.exports = function (start, stop, params) {
                     lines[curLine] = str.substring(0, idx);
                 }
 
-                if (newLine && wsLine && curLineLength > stop) {
+                if (preservedLine && cleanLine && wsLine && curLineLength > stop) {
                     // Add the remnants to the next line, just like when `wsAll` is true.
                     rBase = str.length - (curLineLength - stop);
                     if (rBase < idx) {
@@ -473,6 +469,12 @@ var linewrap = module.exports = function (start, stop, params) {
                     lines[curLine] = str.substring(0,  rBase);
                 }
                 bulge = 0;
+            }
+
+            if (preservedLine && !beforeHardBreak) {
+                // This is a preserved line, and the next output line isn't a
+                // preserved line.
+                preservedLine = false;
             }
 
             // Some remnants are left to the next line.
@@ -543,12 +545,12 @@ var linewrap = module.exports = function (start, stop, params) {
                                     curLine++;
                                     curLineLength = start;
 
-                                    newLine = cleanLine = true;
+                                    preservedLine = cleanLine = true;
                                 }
                             }
                             // We are adding to either the existing line (if no line break
                             // is qualified for preservance) or a "new" line.
-                            if (!cleanLine || wsAll || (wsLine && newLine)) {
+                            if (!cleanLine || wsAll || (wsLine && preservedLine)) {
                                 if (wsCollapse || (!cleanLine && breaks[num] === '')) {
                                     breaks[num] = ' ';
                                 }
@@ -557,7 +559,7 @@ var linewrap = module.exports = function (start, stop, params) {
                             }
                         } else if (respectLineBreaks === 'm' && num < respectNum) {
                             // These line breaks should be stripped.
-                            if (!cleanLine || wsAll || (wsLine && newLine)) {
+                            if (!cleanLine || wsAll || (wsLine && preservedLine)) {
                                 if (wsCollapse) {
                                     chunk = ' ';
                                 } else {
@@ -581,10 +583,10 @@ var linewrap = module.exports = function (start, stop, params) {
                                 }
 
                                 curLineLength = start;
-                                newLine = cleanLine = true;
+                                preservedLine = cleanLine = true;
 
                             } else {
-                                if (wsAll || newLine) {
+                                if (wsAll || (preservedLine && cleanLine)) {
                                     lines[curLine] += breaks[0];
                                     curLineLength += breaks[0].length;
                                 }
@@ -597,13 +599,13 @@ var linewrap = module.exports = function (start, stop, params) {
                                     curLine++;
                                     curLineLength = start + breaks[j+1].length;
 
-                                    newLine = cleanLine = true;
+                                    preservedLine = cleanLine = true;
                                 }
                             }
                         }
                     } else {
                         // These line breaks should be stripped.
-                        if (!cleanLine || wsAll || (wsLine && newLine)) {
+                        if (!cleanLine || wsAll || (wsLine && preservedLine)) {
                             chunk = chunk.remaining;
 
                             // Bug: If `wsAll` is true, `cleanLine` is false, and `chunk`
@@ -633,7 +635,6 @@ var linewrap = module.exports = function (start, stop, params) {
                             curLineLength += remnant.length;
                         }
 
-                        // `newLine` doesn't change its value here.
                         cleanLine = true;
                     }
                     lines[curLine] += chunk.value;
@@ -662,22 +663,22 @@ var linewrap = module.exports = function (start, stop, params) {
                         continue;
                     }
 
-                    if (wsStrip || (wsLine && !newLine)) {
+                    if (wsStrip || (wsLine && !(preservedLine && cleanLine))) {
                         chunk = chunk.replace(pPat, '');
                     }
-                    newLine = cleanLine = false;
+                    cleanLine = false;
 
                 } else {
                     // Add `chunk` to this line
                     if (cleanLine) {
-                        if (wsStrip || (wsLine && !newLine)) {
+                        if (wsStrip || (wsLine && !(preservedLine && cleanLine))) {
                             chunk = chunk.replace(pPat, '');
                             if (chunk !== '') {
-                                newLine = cleanLine = false;
+                                cleanLine = false;
                             }
                         } else {
                             if (nonWsPat.test(chunk)) {
-                                newLine = cleanLine = false;
+                                cleanLine = false;
                             }
                         }
                     }
