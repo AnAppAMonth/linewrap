@@ -12,6 +12,7 @@ exports.invalidvalues = function() {
         'lineBreakScheme': 'invalid scheme',
         'respectLineBreaks': 'invalid',
         'tabWidth': [],
+        'preservedLineIndent': 'invalid',
         'wrapLineIndent': -1
     };
     var options = Object.keys(optionMap),

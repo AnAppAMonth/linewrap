@@ -142,6 +142,19 @@ some lines but not others.
    at any position.
 
 
+Additional indentation in preserved lines
+----------------------------------------
+
+**Relevant option**: `preservedLineIndent`.
+
+This option applies additional indentation to lines preserved from the input. This
+can be used, for example, to convert from the blank-line paragraphing style to the
+indenting paragraphing style.
+
+`preservedLineIndent` must be a non-negative integer specifying the amount of the
+indentation. If specified, all preserved lines will be indented by this amount.
+
+
 Additional indentation in wrapped lines
 ----------------------------------------
 

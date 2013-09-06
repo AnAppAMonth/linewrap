@@ -76,11 +76,13 @@ var linewrap = module.exports = function (start, stop, params) {
         skip, skipScheme, lineBreak, lineBreakScheme,
         respectLineBreaks = 'all',
         respectNum,
+        preservedLineIndent,
         wrapLineIndent, wrapLineIndentBase;
 
     var skipPat;
     var lineBreakPat, lineBreakStr;
     var multiLineBreakPat;
+    var preservedLinePrefix = '';
     var wrapLineIndentPat, wrapLineInitPrefix = '';
     var tabRepl;
     var item, flags;
@@ -118,6 +120,9 @@ var linewrap = module.exports = function (start, stop, params) {
                 }
                 if (item.respectLineBreaks) {
                     respectLineBreaks = item.respectLineBreaks;
+                }
+                if (item.preservedLineIndent !== undefined) {
+                    preservedLineIndent = item.preservedLineIndent;
                 }
                 if (item.wrapLineIndent !== undefined) {
                     wrapLineIndent = item.wrapLineIndent;
@@ -175,6 +180,18 @@ var linewrap = module.exports = function (start, stop, params) {
         var match = rlbSMPat.exec(respectLineBreaks);
         respectLineBreaks = match[1];
         respectNum = parseInt(match[2], 10);
+    }
+
+    if (params.preservedLineIndent !== undefined) {
+        if (parseInt(params.preservedLineIndent, 10) >= 0) {
+            preservedLineIndent = parseInt(params.preservedLineIndent, 10);
+        } else {
+            throw new TypeError('preservedLineIndent must be a non-negative integer');
+        }
+    }
+
+    if (preservedLineIndent > 0) {
+        preservedLinePrefix = new Array(preservedLineIndent + 1).join(' ');
     }
 
     if (params.wrapLineIndent !== undefined) {
@@ -441,7 +458,8 @@ var linewrap = module.exports = function (start, stop, params) {
         }
 
         var curLine = 0,
-            curLineLength = start,
+            curLineLength = start + preservedLinePrefix.length,
+            lines = [ prefix + preservedLinePrefix ],
             // Holds the "real length" (excluding trailing whitespaces) of the
             // current line if it exceeds `stop`, otherwise 0.
             // ONLY USED when `wsAll` is true, in `finishOffCurLine()`.
@@ -465,8 +483,7 @@ var linewrap = module.exports = function (start, stop, params) {
             preservedLine = true,
             // The current indent prefix for wrapped lines.
             wrapLinePrefix = wrapLineInitPrefix,
-            remnant,
-            lines = [ prefix ];
+            remnant;
 
         // Always returns '' if `beforeHardBreak` is true.
         //
@@ -592,9 +609,9 @@ var linewrap = module.exports = function (start, stop, params) {
                                     }
                                     finishOffCurLine(true);
 
-                                    lines.push(prefix);
+                                    lines.push(prefix + preservedLinePrefix);
                                     curLine++;
-                                    curLineLength = start;
+                                    curLineLength = start + preservedLinePrefix.length;
 
                                     preservedLine = cleanLine = true;
                                 }
@@ -629,11 +646,11 @@ var linewrap = module.exports = function (start, stop, params) {
                                 finishOffCurLine(true);
 
                                 for (j = 0; j < num; j++) {
-                                    lines.push(prefix);
+                                    lines.push(prefix + preservedLinePrefix);
                                     curLine++;
                                 }
 
-                                curLineLength = start;
+                                curLineLength = start + preservedLinePrefix.length;
                                 preservedLine = cleanLine = true;
 
                             } else {
@@ -646,9 +663,9 @@ var linewrap = module.exports = function (start, stop, params) {
                                     // Finish off the current line.
                                     finishOffCurLine(true);
 
-                                    lines.push(prefix + breaks[j+1]);
+                                    lines.push(prefix + preservedLinePrefix + breaks[j+1]);
                                     curLine++;
-                                    curLineLength = start + breaks[j+1].length;
+                                    curLineLength = start + preservedLinePrefix.length + breaks[j+1].length;
 
                                     preservedLine = cleanLine = true;
                                 }
