@@ -1,41 +1,41 @@
 {
-    "name" : "linewrap",
-    "description" : "Word wrapping with HTML, ANSI color code, indentation and paragraphing support.",
-    "version" : "0.2.0",
-    "repository" : {
-        "type" : "git",
-        "url" : "git://github.com/halfninety/linewrap.git"
-    },
-    "main" : "./index.js",
-    "keywords" : [
-        "word",
-        "wrap",
-        "line",
-        "paragraph",
-        "text",
-        "string",
-        "indent",
-        "rule",
-        "format",
-        "column"
-    ],
-    "directories" : {
-        "lib" : ".",
-        "example" : "example",
-        "test" : "test"
-    },
-    "scripts" : {
-        "pretest": "jshint --verbose --config test/jshint.json ./*js test/*js example/*js",
-        "test" : "expresso"
-    },
-    "devDependencies" : {
-        "expresso" : "=0.7.x",
-        "jshint" : "*",
-        "wordwrap" : "*"
-    },
-    "engines" : {
-        "node" : ">=0.4.0"
-    },
-    "license" : "MIT",
-    "author": "Feng Qiu <feng@ban90.com>"
+  "name": "linewrap",
+  "description": "Word wrapping with HTML, ANSI color code, indentation and paragraphing support.",
+  "version": "0.2.1",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/halfninety/linewrap.git"
+  },
+  "main": "./index.js",
+  "keywords": [
+    "word",
+    "wrap",
+    "line",
+    "paragraph",
+    "text",
+    "string",
+    "indent",
+    "rule",
+    "format",
+    "column"
+  ],
+  "directories": {
+    "lib": ".",
+    "example": "example",
+    "test": "test"
+  },
+  "scripts": {
+    "pretest": "jshint --verbose --config test/jshint.json ./*js test/*js example/*js",
+    "test": "expresso"
+  },
+  "devDependencies": {
+    "expresso": "=0.7.x",
+    "jshint": "*",
+    "wordwrap": "*"
+  },
+  "engines": {
+    "node": ">=0.4.0"
+  },
+  "license": "MIT",
+  "author": "Feng Qiu <feng@ban90.com>"
 }
